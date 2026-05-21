@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAI - Asisten Guru Pintar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { primary: '#4f46e5', primaryHover: '#4338ca' }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @media print {
+            body { background-color: white !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .print-area { width: 100% !important; height: auto !important; overflow: visible !important; }
+            .question-card { break-inside: avoid; border: none !important; border-bottom: 1px solid #e5e7eb !important; border-radius: 0 !important; padding: 0 !important; margin-bottom: 20px !important; }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Tab Styles */
+        .tab-btn { transition: all 0.2s; border-bottom: 2px solid transparent; }
+        .tab-btn.active { border-bottom-color: #4f46e5; color: #4f46e5; font-weight: 600; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex flex-col font-sans overflow-hidden">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center no-print shrink-0 z-20 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="bg-primary text-white p-2 rounded-lg"><i class="fa-solid fa-graduation-cap text-xl"></i></div>
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 leading-tight">EduAI</h1>
+                <p class="text-xs text-slate-500 font-medium">Generator Soal & Kisi-kisi</p>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-1 flex overflow-hidden">
+        <!-- Left Panel: Form Input (Didesain ulang agar tombol Sticky) -->
+        <section class="w-full lg:w-1/3 xl:w-1/4 bg-white border-r border-slate-200 flex flex-col no-print h-full">
+            
+            <!-- Area Form yang bisa di-scroll -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <h2 class="text-lg font-semibold mb-4 border-b pb-2">Parameter Soal</h2>
+                <form id="generatorForm" class="space-y-5 pb-4">
+                    
+                    <!-- Mapel & Kelas -->
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Mata Pelajaran <span class="text-red-500">*</span></label>
+                            <select id="mapel" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-white">
+                                <option value="" disabled selected>Pilih Mapel...</option>
+                                <option value="Pendidikan Agama Islam">Pendidikan Agama Islam</option>
+                                <option value="Pendidikan Agama Kristen">Pendidikan Agama Kristen</option>
+                                <option value="Pendidikan Agama Katolik">Pendidikan Agama Katolik</option>
+                                <option value="Pendidikan Agama Hindu">Pendidikan Agama Hindu</option>
+                                <option value="Pendidikan Agama Buddha">Pendidikan Agama Buddha</option>
+                                <option value="Pendidikan Agama Khonghucu">Pendidikan Agama Khonghucu</option>
+                                <option value="Pendidikan Pancasila">Pendidikan Pancasila</option>
+                                <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                                <option value="Matematika">Matematika</option>
+                                <option value="Bahasa Inggris">Bahasa Inggris</option>
+                                <option value="IPAS">IPAS</option>
+                                <option value="PJOK">PJOK</option>
+                                <option value="Seni Budaya">Seni Budaya</option>
+                                <option value="Mulok">Mulok</option>
+                                <option value="Coding AI">Coding AI</option>
+                            </select>
+                        </div>
+                        <div class="w-1/3">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Kelas</label>
+                            <select id="kelas" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-white">
+                                <optgroup label="SD / MI"><option value="4 SD">4 SD</option><option value="5 SD" selected>5 SD</option><option value="6 SD">6 SD</option></optgroup>
+                                <optgroup label="SMP / MTs"><option value="7 SMP">7 SMP</option><option value="8 SMP">8 SMP</option><option value="9 SMP">9 SMP</option></optgroup>
+                                <optgroup label="SMA / MA"><option value="10 SMA">10 SMA</option><option value="11 SMA">11 SMA</option><option value="12 SMA">12 SMA</option></optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Materi -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Materi Pokok / CP <span class="text-red-500">*</span></label>
+                        <textarea id="topik" required rows="3" placeholder="Contoh: Siswa dapat menganalisis peran jaring-jaring makanan." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"></textarea>
+                    </div>
+
+                    <!-- Upload PDF -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Referensi Materi PDF (Opsional)</label>
+                        <div class="mt-1 flex justify-center px-4 py-3 border-2 border-slate-300 border-dashed rounded-lg hover:border-primary cursor-pointer" onclick="document.getElementById('fileUpload').click()">
+                            <div class="text-center">
+                                <i class="fa-solid fa-file-pdf text-2xl text-slate-400 mb-1"></i>
+                                <div class="text-xs text-slate-600">
+                                    <span class="text-primary font-medium">Klik untuk upload</span> atau drag & drop
+                                    <input id="fileUpload" type="file" accept=".pdf" class="sr-only" onchange="updateFileName(this)">
+                                </div>
+                                <div id="fileNameDisplay" class="hidden mt-1 text-primary text-[11px] font-semibold"><i class="fa-solid fa-check"></i> <span id="fileNameText"></span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jumlah Soal -->
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex gap-3">
+                        <div class="flex-1">
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Jml. Pilgan</label>
+                            <input type="number" id="jml_pg" value="3" min="0" max="20" class="w-full px-2 py-1.5 border rounded-lg focus:ring-2 focus:ring-primary text-sm">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Jml. Esai</label>
+                            <input type="number" id="jml_esai" value="1" min="0" max="10" class="w-full px-2 py-1.5 border rounded-lg focus:ring-2 focus:ring-primary text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Level Kognitif -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Level Kognitif</label>
+                        <select id="level" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm bg-white">
+                            <option value="HOTS">HOTS (C4, C5, C6) - Penalaran & Analisis</option>
+                            <option value="MOTS">MOTS (C3) - Aplikasi</option>
+                            <option value="LOTS">LOTS (C1, C2) - Ingatan & Pemahaman</option>
+                            <option value="Campuran" selected>Campuran Proporsional</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Area Tombol yang Selalu Muncul (Sticky Bottom) -->
+            <div class="p-4 bg-white border-t border-slate-200 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] shrink-0 z-10">
+                <button type="submit" form="generatorForm" id="btnSubmit" class="w-full bg-primary hover:bg-primaryHover text-white font-medium py-3 px-4 rounded-lg transition shadow-md flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Soal & Kisi-kisi
+                </button>
+            </div>
+        </section>
+
+        <!-- Right Panel: Output Preview -->
+        <section class="flex-1 bg-slate-50 overflow-y-auto relative print-area flex flex-col">
+            
+            <!-- Toolbar Tabs (No Print) -->
+            <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-0 flex justify-between items-center z-10 no-print shadow-sm" id="outputToolbar" style="display: none;">
+                <div class="flex gap-6 pt-3">
+                    <button id="tabSoal" class="tab-btn active pb-3 text-slate-600" onclick="switchTab('soal')"><i class="fa-regular fa-file-lines mr-1"></i> Lembar Soal</button>
+                    <button id="tabKisi" class="tab-btn pb-3 text-slate-600" onclick="switchTab('kisi')"><i class="fa-solid fa-table-list mr-1"></i> Kisi-kisi & Kunci</button>
+                </div>
+                <div class="flex gap-2 pb-2 mt-2">
+                    <button onclick="downloadWord()" class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-word"></i> Download Word
+                    </button>
+                    <button onclick="window.print()" class="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 transition shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-print"></i> Print
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="p-8 max-w-4xl mx-auto w-full">
+                
+                <!-- State: Empty -->
+                <div id="emptyState" class="h-full flex flex-col items-center justify-center text-center pt-20 no-print">
+                    <div class="w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center mb-6"><i class="fa-solid fa-robot text-5xl text-slate-300"></i></div>
+                    <h3 class="text-xl font-bold text-slate-700 mb-2">Belum ada data</h3>
+                    <p class="text-slate-500 max-w-sm text-sm">Isi parameter di kiri untuk membuat soal, kisi-kisi, dan kunci jawaban secara otomatis.</p>
+                </div>
+
+                <!-- State: Loading -->
+                <div id="loadingState" class="hidden flex-col items-center justify-center pt-32 no-print">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                    <p class="text-lg font-medium text-slate-700">AI Sedang Berpikir...</p>
+                    <p class="text-sm text-slate-500 mt-1">Ini mungkin memakan waktu hingga 15-20 detik.</p>
+                </div>
+
+                <!-- State: Error -->
+                <div id="errorState" class="hidden flex-col items-center justify-center pt-32 no-print text-center">
+                    <i class="fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-4"></i>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Terjadi Kesalahan</h3>
+                    <p id="errorMessage" class="text-slate-600 max-w-md text-sm">Tidak dapat terhubung ke AI.</p>
+                </div>
+
+                <!-- Hasil Generate Utama -->
+                <div id="resultContainer" class="hidden w-full">
+                    
+                    <!-- VIEW: SOAL -->
+                    <div id="viewSoal" class="w-full bg-white p-8 border border-slate-200 shadow-sm rounded-lg mb-8">
+                        <div class="text-center mb-8 pb-4 border-b-2 border-black">
+                            <h1 class="text-2xl font-bold uppercase mb-2">LEMBAR SOAL EVALUASI</h1>
+                            <p class="text-lg font-medium">Mapel: <span id="lblMapel"></span> | Kelas: <span id="lblKelas"></span></p>
+                        </div>
+                        <div id="soalList" class="space-y-6"></div>
+                    </div>
+
+                    <!-- VIEW: KISI-KISI & KUNCI -->
+                    <div id="viewKisi" class="w-full hidden">
+                        <div class="text-center mb-8 bg-white p-4 border border-slate-200 shadow-sm rounded-lg">
+                            <h1 class="text-xl font-bold uppercase mb-1">KISI-KISI SOAL & KUNCI JAWABAN</h1>
+                            <p class="text-md text-slate-600">Mapel: <span id="lblMapel2"></span> | Kelas: <span id="lblKelas2"></span></p>
+                        </div>
+                        
+                        <!-- Tabel Kisi-Kisi -->
+                        <div class="overflow-x-auto border border-slate-200 rounded-lg shadow-sm mb-8">
+                            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-bold text-slate-700 w-12">No</th>
+                                        <th class="px-4 py-3 text-left font-bold text-slate-700">Indikator Soal</th>
+                                        <th class="px-4 py-3 text-left font-bold text-slate-700 w-24">Level</th>
+                                        <th class="px-4 py-3 text-left font-bold text-slate-700 w-24">Bentuk</th>
+                                        <th class="px-4 py-3 text-left font-bold text-slate-700 w-32">Kunci</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="kisiTableBody" class="bg-white divide-y divide-slate-200">
+                                    <!-- Diisi oleh JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Kumpulan Pembahasan -->
+                        <h3 class="font-bold text-lg border-b pb-2 mb-4 text-slate-700">Pembahasan Lengkap</h3>
+                        <div id="pembahasanList" class="space-y-4">
+                            <!-- Diisi oleh JS -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- HIDDEN CONTAINER UNTUK EXPORT WORD -->
+    <div id="wordExportData" style="display: none;"></div>
+
+    <script>
+        const form = document.getElementById('generatorForm');
+        let currentData = null; 
+        
+        let pdfBase64Data = null;
+        let pdfMimeType = null;
+
+        // Logic membaca file PDF ke sistem
+        function updateFileName(input) {
+            const display = document.getElementById('fileNameDisplay');
+            if (input.files && input.files.length > 0) {
+                document.getElementById('fileNameText').textContent = input.files[0].name;
+                display.classList.remove('hidden');
+
+                const file = input.files[0];
+                pdfMimeType = file.type;
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    let encoded = reader.result.toString().replace(/^data:(.*,)?/, '');
+                    if ((encoded.length % 4) > 0) encoded += '='.repeat(4 - (encoded.length % 4));
+                    pdfBase64Data = encoded;
+                };
+            } else {
+                display.classList.add('hidden');
+                pdfBase64Data = null;
+                pdfMimeType = null;
+            }
+        }
+
+        // Tab Switcher
+        function switchTab(tabName) {
+            document.getElementById('tabSoal').classList.remove('active');
+            document.getElementById('tabKisi').classList.remove('active');
+            document.getElementById('viewSoal').classList.add('hidden');
+            document.getElementById('viewKisi').classList.add('hidden');
+
+            if(tabName === 'soal') {
+                document.getElementById('tabSoal').classList.add('active');
+                document.getElementById('viewSoal').classList.remove('hidden');
+            } else {
+                document.getElementById('tabKisi').classList.add('active');
+                document.getElementById('viewKisi').classList.remove('hidden');
+            }
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Ambil semua parameter
+            const mapel = document.getElementById('mapel').value;
+            const kelas = document.getElementById('kelas').value;
+            const topik = document.getElementById('topik').value;
+            const level = document.getElementById('level').value;
+            const jml_pg = document.getElementById('jml_pg').value;
+            const jml_esai = document.getElementById('jml_esai').value;
+            
+            // Atur UI Loading
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('resultContainer').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('outputToolbar').style.display = 'none';
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('loadingState').classList.add('flex');
+            
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses dengan AI...';
+
+            try {
+                // 1. Merangkai Perintah (Prompt) untuk AI
+                const promptText = `Sebagai ahli pembuat soal kurikulum merdeka, tolong buatkan kisi-kisi beserta soal evaluasi berdasarkan parameter berikut:
+                - Mata Pelajaran: ${mapel}
+                - Kelas: ${kelas}
+                - Materi Pokok / Capaian Pembelajaran: ${topik}
+                - Jumlah Soal Pilihan Ganda: ${jml_pg}
+                - Jumlah Soal Esai: ${jml_esai}
+                - Target Level Kognitif: ${level}.
+                
+                Jika ada file yang dilampirkan, prioritaskan mengambil referensi bahan soal dari teks di dalam file tersebut. 
+                Jadikan output menjadi format JSON terstruktur persis sesuai schema yang diminta.`;
+
+                const partsArray = [{ text: promptText }];
+                
+                // Masukkan file PDF jika ada
+                if (pdfBase64Data) {
+                    partsArray.push({
+                        inlineData: {
+                            mimeType: pdfMimeType || "application/pdf",
+                            data: pdfBase64Data
+                        }
+                    });
+                }
+
+                // 2. Skema JSON Wajib untuk Output yang Rapi
+                const payload = {
+                    contents: [{ parts: partsArray }],
+                    systemInstruction: { parts: [{ text: "Kamu adalah asisten guru. Balas hanya dengan format JSON murni. Jangan tambahkan penjelasan pembuka atau penutup." }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                kisi_kisi: {
+                                    type: "ARRAY",
+                                    items: {
+                                        type: "OBJECT",
+                                        properties: {
+                                            nomor: { type: "INTEGER" },
+                                            indikator: { type: "STRING" },
+                                            level: { type: "STRING" },
+                                            bentuk: { type: "STRING" },
+                                            kunci: { type: "STRING" }
+                                        }
+                                    }
+                                },
+                                soal: {
+                                    type: "ARRAY",
+                                    items: {
+                                        type: "OBJECT",
+                                        properties: {
+                                            tipe: { type: "STRING", description: "Wajib berisi 'pg' atau 'esai'" },
+                                            nomor: { type: "INTEGER" },
+                                            pertanyaan: { type: "STRING" },
+                                            opsi: { type: "ARRAY", items: { type: "STRING" }, description: "Jika 'esai' kosongkan array. Jika 'pg' beri 4 opsi misal ['A. ...', 'B. ...']" },
+                                            jawaban_benar: { type: "STRING" },
+                                            pembahasan: { type: "STRING" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+
+                // 3. Menghubungi Server Google Gemini API Asli
+                // PENTING: API Key sudah dimasukkan sesuai permintaan
+                const apiKey = "AIzaSyC_snrr6t7vxHt46odsGDHTEXTIQ9WSEoQ"; 
+                const model = "gemini-2.5-flash-preview-09-2025";
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+                let apiResult = null;
+                const retries = [1000, 2000, 4000, 8000, 16000]; // Sistem Anti-Gagal (Auto Retry)
+                
+                for (let i = 0; i <= retries.length; i++) {
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+                        apiResult = await response.json();
+                        break; 
+                    } catch (err) {
+                        if (i === retries.length) throw err;
+                        await new Promise(r => setTimeout(r, retries[i]));
+                    }
+                }
+
+                // 4. Menerjemahkan Hasil dan Menampilkannya
+                let responseText = apiResult.candidates[0].content.parts[0].text;
+                
+                // Mencegah error jika AI menyelipkan tag markdown
+                responseText = responseText.replace(/```json/gi, '').replace(/```/gi, '').trim();
+                
+                currentData = JSON.parse(responseText);
+
+                // Set Kop Ujian
+                document.getElementById('lblMapel').innerText = mapel;
+                document.getElementById('lblKelas').innerText = kelas;
+                document.getElementById('lblMapel2').innerText = mapel;
+                document.getElementById('lblKelas2').innerText = kelas;
+
+                // Render HTML
+                renderAll(currentData, mapel, kelas, topik);
+
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('resultContainer').classList.remove('hidden');
+                document.getElementById('outputToolbar').style.display = 'flex';
+                switchTab('soal'); // Default tab ke lembar soal
+
+            } catch (error) {
+                console.error("Terjadi Kesalahan:", error);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('errorState').classList.remove('hidden');
+                document.getElementById('errorState').classList.add('flex');
+                
+                // Tampilkan pesan error yang lebih detail
+                let pesanError = "Gagal memproses AI. Mohon coba lagi.";
+                if (error.message.includes('400')) pesanError = "API Key kosong atau salah. Jika memakai XAMPP, pastikan API Key diisi di dalam kode.";
+                else if (error.message.includes('JSON')) pesanError = "Format balasan AI tidak sesuai. Silakan klik Generate lagi.";
+                
+                document.getElementById('errorMessage').innerText = pesanError;
+            } finally {
+                // Kembalikan tombol seperti semula
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate Soal & Kisi-kisi';
+            }
+        });
+
+        // FUNGSI RENDER (HTML & Data Persiapan Word)
+        function renderAll(data, mapel, kelas, topik) {
+            const soalList = document.getElementById('soalList');
+            const kisiBody = document.getElementById('kisiTableBody');
+            const bahasList = document.getElementById('pembahasanList');
+            
+            soalList.innerHTML = '';
+            kisiBody.innerHTML = '';
+            bahasList.innerHTML = '';
+
+            // HTML Mentah Untuk Mode Download MS. Word
+            let wordHTML = `
+                <div style="font-family: 'Times New Roman', Times, serif;">
+                    <h2 style="text-align:center;">KISI-KISI SOAL EVALUASI</h2>
+                    <p>Mata Pelajaran : ${mapel}<br>Kelas : ${kelas}<br>Materi : ${topik}</p>
+                    <table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse:collapse; margin-bottom: 30px;">
+                        <tr style="background-color:#f2f2f2;">
+                            <th>No</th><th>Indikator Soal</th><th>Level</th><th>Bentuk</th><th>Kunci</th>
+                        </tr>
+            `;
+
+            // 1. Merangkai Tabel Kisi-kisi
+            if(data.kisi_kisi) {
+                data.kisi_kisi.forEach((k) => {
+                    kisiBody.innerHTML += `
+                        <tr>
+                            <td class="px-4 py-3 whitespace-nowrap">${k.nomor}</td>
+                            <td class="px-4 py-3 text-slate-800">${k.indikator}</td>
+                            <td class="px-4 py-3 text-slate-600 text-xs font-semibold"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded">${k.level}</span></td>
+                            <td class="px-4 py-3 text-slate-600 capitalize">${k.bentuk}</td>
+                            <td class="px-4 py-3 font-bold text-primary">${k.kunci}</td>
+                        </tr>
+                    `;
+                    wordHTML += `<tr><td align="center">${k.nomor}</td><td>${k.indikator}</td><td align="center">${k.level}</td><td align="center">${k.bentuk}</td><td align="center">${k.kunci}</td></tr>`;
+                });
+            }
+            wordHTML += `</table><br clear="all" style="page-break-before:always" />`; 
+            wordHTML += `<h2 style="text-align:center;">LEMBAR SOAL</h2>`;
+
+            // 2. Merangkai Lembar Soal & Pembahasan
+            if(data.soal) {
+                data.soal.forEach((s) => {
+                    const isPG = s.tipe.toLowerCase() === 'pg';
+                    let htmlOpsi = '';
+                    let wordOpsi = '';
+
+                    if(isPG && s.opsi && s.opsi.length > 0) {
+                        htmlOpsi = '<div class="mt-3 space-y-2">';
+                        s.opsi.forEach(o => {
+                            htmlOpsi += `<div class="flex gap-2 text-slate-700"><span>${o}</span></div>`;
+                            wordOpsi += `<div style="margin-left: 20px;">${o}</div>`;
+                        });
+                        htmlOpsi += '</div>';
+                    } else {
+                        htmlOpsi = `<div class="mt-6 mb-2 border border-dashed border-slate-300 h-24 rounded"></div>`;
+                        wordOpsi = `<br><br><br>`;
+                    }
+
+                    // Tampilan Web Soal
+                    soalList.innerHTML += `
+                        <div class="mb-5 pb-5 border-b border-slate-100 last:border-0 last:pb-0">
+                            <div class="flex gap-3 text-slate-800">
+                                <span class="font-bold">${s.nomor}.</span>
+                                <div class="flex-1">
+                                    <p class="font-medium text-[15px] leading-relaxed">${s.pertanyaan}</p>
+                                    ${htmlOpsi}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Tampilan Word Soal
+                    wordHTML += `
+                        <div style="margin-bottom: 15px;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr><td width="25" valign="top"><b>${s.nomor}.</b></td><td valign="top">${s.pertanyaan}</td></tr>
+                            </table>
+                            ${wordOpsi}
+                        </div>
+                    `;
+
+                    // Pembahasan Web
+                    bahasList.innerHTML += `
+                        <div class="bg-white p-4 border border-slate-200 rounded text-sm">
+                            <p class="font-bold mb-1">Soal No. ${s.nomor} <span class="text-primary ml-2">Jawaban: ${s.jawaban_benar}</span></p>
+                            <p class="text-slate-600"><b>Pembahasan:</b> ${s.pembahasan}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            // Simpan HTML murni ke container tersembunyi
+            wordHTML += `</div>`;
+            document.getElementById('wordExportData').innerHTML = wordHTML;
+        }
+
+        // FUNGSI EKSPOR WORD
+        function downloadWord() {
+            if(!currentData) return;
+            
+            const mapel = document.getElementById('mapel').value.replace(/ /g, "_");
+            const kelas = document.getElementById('kelas').value.replace(/ /g, "_");
+            const filename = `Evaluasi_${mapel}_${kelas}.doc`;
+
+            const htmlContent = document.getElementById('wordExportData').innerHTML;
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML to Word</title></head><body>";
+            const footer = "</body></html>";
+            const sourceHTML = header + htmlContent + footer;
+            
+            const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
